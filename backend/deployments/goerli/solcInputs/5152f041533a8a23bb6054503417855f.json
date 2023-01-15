@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/FundMe.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.17;\n\n\n\nerror FundMe__OnlyOwner();\nerror FundMe__NotEnoughFundsToWithdraw();\nerror FundMe__TransactionFailed();\n\n\ncontract FundMe {\n\n    address private immutable i_owner;\n\n    // The amount of funds donated by an address\n\n    mapping(address => uint256) private donations;\n    address[] private donators;\n\n    constructor() {\n\n        i_owner = msg.sender;\n\n    } // end constructor\n\n\n    receive() external payable {\n\n        fund();\n\n    } // end receive()\n\n\n    fallback() external payable {\n\n\n    } // end fallback()\n\n\n    /**\n     * @notice A function to fund the contract.\n     */\n    function fund() public payable {\n\n        uint256 amountDonated = donations[msg.sender];\n\n        if (amountDonated == 0) {\n\n            donators.push(msg.sender);\n\n        } // end if\n\n        amountDonated += msg.value;\n\n        // Update the information in storage\n\n        donations[msg.sender] = amountDonated;\n\n    } // end fund()\n\n\n    /**\n     * @notice This is a function to withdraw all the funds from a contract,\n     *         can be called only by the contract owner.\n     */\n    function withdraw() public onlyOwner {\n\n        // Check if there are funds to withdraw\n\n        if (address(this).balance == 0) {\n\n            // Revert the transaction\n\n            revert FundMe__NotEnoughFundsToWithdraw();\n\n        } // end if\n\n        // Remove all the contributors\n\n        delete donators;\n\n        // Send all the funds\n\n        (bool success,) = payable(msg.sender).call{ value: address(this).balance }(\"\");\n\n        // Check if the funds were not sent successfully, then revert the transaction\n\n        if (success == false) {\n\n            // Revert the transaction\n\n            revert FundMe__TransactionFailed();\n\n        } // end if\n\n    } // end withdraw()\n\n\n    // Getter functions\n\n    /**\n     * @notice A function to get the contract owner.\n     */\n    function getContractOwner() public view returns(address) {\n\n        return i_owner;\n\n    } // end getContractOwner()\n\n\n    /**\n     * @notice A function to get all the donators to a contract.\n     */\n    function getAllDonators() public view returns(address[] memory) {\n\n        return donators;\n\n    } // end getAllDonators()\n\n\n    /**\n     * @notice A function to get the amount of funds donated by an address.\n     * \n     * @param _address Address to check the amount of funds donated by.\n     */\n    function getAmountDonated(address _address) public view returns(uint256) {\n\n        return donations[_address];\n\n    } // end getAmountDonated()\n\n\n    /**\n     * @notice A function which returns the total value donated to a contract.\n     */\n    function getTotalValueDonated() public view returns(uint256) {\n\n        return address(this).balance;\n\n    } // end getTotalValueDonated()\n\n\n    // Modifiers\n\n\n    /**\n     * @notice A modifier to check if a function is called by the contract owner.\n     */\n    modifier onlyOwner() {\n\n        // Check if it the owner of a contract\n        \n        if (msg.sender != i_owner) {\n\n            // Revert the transaction\n            \n            revert FundMe__OnlyOwner();\n\n        } // end if\n\n        _;\n\n    } // end onlyOwner()\n\n} // end FundMe"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
